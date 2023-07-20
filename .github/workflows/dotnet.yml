@@ -1,10 +1,6 @@
 name: .NET CI
 
 on:
-  push:
-    paths-ignore:
-    - '**.md'
-    - '.github/**'
   pull_request:
     branches: [ master, main ]
     paths-ignore:
@@ -13,32 +9,77 @@ on:
 
 jobs:
   build:
-
+    name: Build and test Linux
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
+    
+    # Install all supported .NET versions
+    - name: Install .NET Core 3.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.x
+
     - name: Setup .NET 6.0
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.x
+    
+    # Building requires an up-to-date .NET SDK.
+    - name: Install .NET 7.0
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 7.0.x
+        
+    # Restore and build
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore      
     - name: Build Nuget Versions
-      run: dotnet build ./tools/Explicit.NuGet.Versions/Explicit.NuGet.Versions.sln
+      run: dotnet build ./tools/Explicit.NuGet.Versions/Explicit.NuGet.Versions.sln      
     - name: Build Release
       run: dotnet build Castle.Windsor.sln -c Release
-    - name: Castle.Windsor.Tests
-      run: dotnet test src/Castle.Windsor.Tests
-    - name: Castle.Windsor.Extensions.DependencyInjection.Tests
-      run: dotnet test src/Castle.Windsor.Extensions.DependencyInjection.Tests
-    - name: Castle.Facilities.AspNetCore.Tests
-      run: dotnet test src/Castle.Facilities.AspNetCore.Tests
-    - name: Castle.Facilities.AspNet.SystemWeb.Tests
-      run: dotnet test src/Castle.Facilities.AspNet.SystemWeb.Tests
-    - name: Castle.Facilities.AspNet.Mvc.Tests
-      run: dotnet test src/Castle.Facilities.AspNet.Mvc.Tests
-    - name: Castle.Facilities.AspNet.WebApi.Tests
-      run: dotnet test src/Castle.Facilities.AspNet.WebApi.Tests
-    - name: Castle.Facilities.WcfIntegration.Tests
-      run: dotnet test src/Castle.Facilities.WcfIntegration.Tests
+      
+    # Run tests for linux
+      
+    - name: Test on .NET Core 3.1
+      run: dotnet test -c Release -f netcoreapp3.1 --no-build --no-restore -l "console;verbosity=detailed"
+
+    - name: Test on .NET 6.0
+      run: dotnet test -c Release -f net6.0 --no-build --no-restore -l "console;verbosity=detailed"
+      
+  test-windows:
+    name: Build and test on Windows
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    # Several .NET Core versions will be used during the test run.
+    # The lowest version gets installed first in order to prevent
+    # "a newer version is already installed" install errors.
+
+    - name: Install .NET Core 2.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 2.1.x
+
+    - name: Install .NET Core 3.1
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.x
+
+    - name: Install .NET 6.0
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    
+    # Building requires an up-to-date .NET SDK.
+    - name: Install .NET 7.0
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 7.0.x
+
+    # Run tests on windows
+    - name: Test on .NET Framework 4.6.2 (Windows only)
+      run: dotnet test -c Release -f net462 -l "console;verbosity=detailed"
