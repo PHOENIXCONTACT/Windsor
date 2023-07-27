@@ -1,4 +1,4 @@
-// Copyright 2004-2017 Castle Project - http://www.castleproject.org/
+// Copyright 2004-2022 Castle Project - http://www.castleproject.org/
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,10 @@ namespace Castle.Facilities.Logging.Tests
 {
 	using Castle.Core.Logging;
 	using Castle.MicroKernel.SubSystems.Configuration;
-#if CASTLE_SERVICES_LOGGING
 	using Castle.Services.Logging.Log4netIntegration;
 	using Castle.Services.Logging.NLogIntegration;
-#endif
 	using Castle.Windsor;
+	using System.IO;
 
 	/// <summary>
 	/// Summary description for BaseTest.
@@ -41,18 +40,16 @@ namespace Castle.Facilities.Logging.Tests
 		protected string GetConfigFile<TLoggerFactory>()
 			where TLoggerFactory : ILoggerFactory
 		{
-#if CASTLE_SERVICES_LOGGING
 			if (typeof(TLoggerFactory) == typeof(Log4netFactory) ||
 				typeof(TLoggerFactory) == typeof(ExtendedLog4netFactory))
 			{
-				return "LoggingFacility\\log4net.facilities.test.config";
+				return Path.Combine("LoggingFacility", "log4net.facilities.test.config");
 			}
 			if (typeof(TLoggerFactory) == typeof(NLogFactory) ||
 				typeof(TLoggerFactory) == typeof(ExtendedNLogFactory))
 			{
-				return "LoggingFacility\\NLog.facilities.test.config";
+				return Path.Combine("LoggingFacility", "NLog.facilities.test.config");
 			}
-#endif
 			return string.Empty;
 		}
 	}
